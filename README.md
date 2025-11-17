@@ -1,20 +1,30 @@
 # Planty
 ## Plant monitoring with personality
 
-> 🚧 THIS PROJECT IS IN THE EARLY STAGES OF DEVELOPMENT. 🚧
-> 
-> The information in this page is subject to change in the future. Check the project logs for progress updates
+> ### 🚧 **Project Status: In-Progress**
+> **THIS PROJECT IS IN THE EARLY STAGES OF DEVELOPMENT**. The information on this page is subject to change. Check the project logs for progress updates.
 
-Planty is a device that monitors your plant's living conditions by means of measuring soil humidity and temperature as well as ambient humidity, temperature and light level. 
-Every plant is different, and thus each one has its own humidity and temperature requirements. The user will input the type of plant being monitored and Planty will automatically
-decide the best living conditions for it based on online sources. 
+![Early breadboard prototype](./docs/images/251117-early_breadboard_prototype.png)
 
-Every plant is different, and that comes with an interesting twist: every plant's personality is different too. The user will not respond to a boring, generic notification to water their
-plants. Instead, it will receive a message from their plants to take care of them, and each one of them will do it in their own personal way. A Whatsapp message will be sent to the user when an update is required. If this turns out to not be possible 
-due to technical limitations with Whatsapp's API, a simple app will be the means of communication with the user.
+## The Idea
+Standard plant monitors are boring. Users get generic notifications and learn to ignore them.
 
-The measurement of each parameter is achieved with a specific sensor. All sensors are then combined with an ESP32 running software that combines these measurements and interfaces with the 
-user.
+*Planty* solves this by giving each plant a unique personality. Instead of a dry notification, your plant will personally message you for care (e.g., "I'm so thirsty!" or "A bit too bright in here for me, don't you think?").
+
+This project also aims to be "smart." The user inputs the plant type (e.g., "Monstera Deliciosa"), and Planty will fetch its ideal living conditions from online sources to create a custom care profile.
+
+## Core Features
+- **Comprehensive Monitoring**: Measures soil humidity, soil temperature, ambient humidity, ambient temperature, and light levels.
+
+- **"Smart" Plant Profiles**: Automatically determines a plant's ideal conditions based on its type.
+
+- **"Personality Engine"**: Delivers care notifications as personalized messages from the plant itself.
+
+- **User Alerts**: Sends a WhatsApp message (first choice) or an app notification (backup plan) when the plant needs care.
+
+- **Low-Power Display**: An E-ink display shows at-a-glance status.
+
+## Hardware
 | Part                                  | Description                             | Part number   |
 |---------------------------------------|-----------------------------------------|---------------|
 | Soil humidity sensor                  | Capacitive moisture sensor              | LM393         |
@@ -22,3 +32,20 @@ user.
 | Ambient temperature + humidity sensor | Combined thermistor and humidity sensor | AM2320        |
 | Display                               | E-ink, 212x104 pixels                   | MH-ET LIVE    |
 | MCU                                   | ESP32 with WiFi and BLE functionality   | ESP32-WROOM32 |
+| Power                                 | LiPo battery and charger module         | 104050        |
+
+## Project Roadmap
+At this early stage, the project roadmap is as follows:
+- [x] Initial hardware selection and parts list
+
+- [ ] Breadboard prototyping and sensor validation
+
+- [ ] Write firmware to read from all sensors
+
+- [ ] Research and integrate with a plant database API
+
+- [ ] Research and integrate with WhatsApp API (or begin app development)
+
+- [ ] Design and 3D print an enclosure
+
+- [ ] PCB design V1
