@@ -26,6 +26,16 @@ static const uint8_t VEML7700_ADDR = 0x10; // 7-bit
 static const uint8_t VEML7700_REG_CONF = 0x00;
 static const uint8_t VEML7700_REG_ALS = 0x04;
 
+#define MOIST_PIN 34
+#define TEMP_PIN 32 // Use ADC1 pin (GPIO32) for more reliable ADC readings on ESP32
+#define R_FIXED 10000
+#define VCC 3.3
+
+const float A = 8.202819e-04;
+const float B = 2.636000e-04;
+const float C = 1.360785e-07;
+const int ADC_MAX = 4095;
+
 GxEPD2_3C<GxEPD2_213_Z98c, GxEPD2_213_Z98c::HEIGHT> display(GxEPD2_213_Z98c(EPD_SS, EPD_DC, EPD_RST, EPD_BUSY));
 
 uint16_t TextCursors[2][TEXT_LINES];
@@ -34,11 +44,11 @@ const char* MSG[TEXT_LINES] = {
   "Arduino Tutorial From",
   "0"
 };
-void PrintMessages(float number );
+void PrintMessages(int light, int humidity, float temperature);
 void WhiteScreen();
 
  
-void PrintMessages(float number)
+void PrintMessages(int light, int humidity, float temperature)
 {
   int16_t tbx, tby; 
   uint16_t tbw, tbh;
@@ -56,9 +66,17 @@ void PrintMessages(float number)
   do
   {
     display.fillScreen(GxEPD_WHITE);
-    display.setTextSize(3);
-    display.setCursor(40, 40);
-    display.println(number);
+    display.setTextSize(1);
+    display.setCursor(0, 20);
+    display.println("light: ");
+    display.println("humidity: ");
+    display.println("temperature: ");
+    display.setCursor(150, 20);  
+    display.println(light);
+    display.setCursor(150, 38);  
+    display.println(humidity);
+    display.setCursor(150, 56);  
+    display.println(temperature);
   }
   while(display.nextPage());
 }
@@ -224,6 +242,17 @@ void veml_diagnostics() {
   }
 }
 
+float calculateTempSteinhart(float r) {
+  // Safety check to prevent log of 0 or negative numbers
+  if (r <= 0) return -999.0; 
+
+  float logR = log(r);
+  float inverseT = A + B * logR + C * pow(logR, 3);
+  
+  // Convert Kelvin to Celsius
+  return (1.0 / inverseT) - 273.15;
+}
+
 void setup() {
   Serial.begin(9600);
   Wire.begin(21, 22); // SDA = GPIO21, SCL = GPIO22 (ESP32 defaults)
@@ -240,6 +269,10 @@ void setup() {
   veml_diagnostics();
   display.init();
 
+  pinMode(MOIST_PIN, INPUT);
+  pinMode(TEMP_PIN, INPUT);
+  // Ensure ADC attenuation maps full 0-3.3V range for this pin
+  analogSetPinAttenuation(TEMP_PIN, ADC_11db);
 }
 
 void loop() {
@@ -256,12 +289,28 @@ void loop() {
   uint16_t als_raw;
   if (read_veml7700_raw(als_raw)) {
       Serial.print("VEML7700 raw ALS: "); Serial.println((float)als_raw);
-      PrintMessages((float)als_raw);
-  } else {
+    } else {
       Serial.println("VEML7700 read failed");
-  }
+    }
+    
+    int moistureValue = analogRead(MOIST_PIN);
+    Serial.print("Soil moisture: ");
+    Serial.println(moistureValue);
 
-
+    int adcVal = analogRead(TEMP_PIN);
+    Serial.print("ADC raw temp: "); Serial.println(adcVal);
+    float tempC = -999.0;
+    if (adcVal <= 0 || adcVal >= ADC_MAX) {
+      Serial.println("ADC reading out of range (0 or max). Check wiring/pin selection.");
+    } else {
+      float resistance = R_FIXED * ((float)adcVal / (ADC_MAX - adcVal));
+      Serial.print("Calculated resistance (ohms): "); Serial.println(resistance);
+      tempC = calculateTempSteinhart(resistance);
+      Serial.print("Temperature sensor value: ");
+      Serial.println(tempC);
+    }
+    
+  PrintMessages(als_raw, moistureValue, tempC);
   
   delay(2000); // AM2302 sampling rate is once every 2 seconds
 }
