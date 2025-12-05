@@ -36,7 +36,7 @@ void setup() {
   else Serial.println("sensors: VEML init failed (or not present)");
 
   display_begin();
-  wireless_begin();
+  wirelessBegin();
 }
 
 void loop() {
@@ -53,16 +53,19 @@ void loop() {
   int adcVal = 0;
   float resistance = 0.0f;
   float tempC = read_tempC(adcVal, resistance);
-  Serial.print("ADC raw temp: "); Serial.println(adcVal);
-  Serial.print("Calculated resistance (ohms): "); Serial.println(resistance);
-  Serial.print("Temperature sensor value: "); Serial.println(tempC);
-  Serial.print("IP Address: "); Serial.println(WiFi.localIP());
+  // Serial.print("ADC raw temp: "); Serial.println(adcVal);
+  // Serial.print("Calculated resistance (ohms): "); Serial.println(resistance);
+  // Serial.print("Temperature sensor value: "); Serial.println(tempC);
+  // Serial.print("IP Address: "); Serial.println(WiFi.localIP());
 
   PrintMessages(als_raw, moistureValue, tempC);
 
-  // Placeholder: send data via wireless module
-  String payload = String("t=") + String(tempC) + ",m=" + String(moistureValue) + ",l=" + String(als_raw);
-  wireless_send(payload);
 
+  readMessagesTelegram();
+  String msg = "Current Readings:\n";
+  msg += "Light: " + String(als_raw) + "\n";
+  msg += "Soil Moisture: " + String(moistureValue) + "\n";
+  msg += "Temperature: " + String(tempC) + " C";
+  // sendTelegramMessage(msg);
   delay(5000);
 }
