@@ -1,5 +1,5 @@
 #pragma once
 #include <Arduino.h>
 
-void display_begin();
-void PrintMessages(int light, int humidity, float temperature);
+void einkBegin();
+void printMessagesEink(int light, int humidityCalathea, int humidityDieffenbachia, float temperature);

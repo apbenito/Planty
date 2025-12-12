@@ -17,11 +17,11 @@ const char* MSG[TEXT_LINES] = {
   "0"
 };
 
-void display_begin() {
+void einkBegin() {
   display.init();
 }
 
-void PrintMessages(int light, int humidity, float temperature)
+void printMessagesEink(int light, int humidityCalathea, int humidityDieffenbachia, float temperature)
 {
   int16_t tbx, tby; 
   uint16_t tbw, tbh;
@@ -42,13 +42,16 @@ void PrintMessages(int light, int humidity, float temperature)
     display.setTextSize(1);
     display.setCursor(0, 20);
     display.println("light: ");
-    display.println("humidity: ");
+    display.println("humidity cal.: ");
+    display.println("humidity dief.: ");
     display.println("temperature: ");
-    display.setCursor(150, 20);  
+    display.setCursor(175, 20);  
     display.println(light);
-    display.setCursor(150, 38);  
-    display.println(humidity);
-    display.setCursor(150, 56);  
+    display.setCursor(175, 38);  
+    display.println(humidityCalathea);
+    display.setCursor(175, 56);  
+    display.println(humidityDieffenbachia);
+    display.setCursor(175, 74);  
     display.println(temperature);
   }
   while(display.nextPage());

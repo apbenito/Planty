@@ -1,5 +1,10 @@
 #include "sensors.h"
+#include "main.h"
 #include <Wire.h>
+
+// Absolute readings:
+// Soil moisture: 1250 - 4096
+// Light: 0 - 65535, 8-10k is ambient light
 
 static const uint8_t AM2320_ADDR = 0x5C;  // 7-bit I2C address
 static const uint8_t VEML7700_ADDR = 0x10; // 7-bit
@@ -24,7 +29,7 @@ static uint16_t crc16_modbus(const uint8_t *buf, size_t len) {
     return crc;
 }
 
-bool read_am2320_i2c(float &humidity, float &temperature) {
+bool readTempMoist(float &humidity, float &temperature) {
     uint8_t resp[8];
 
     // Wake sensor (dummy write)
@@ -75,7 +80,7 @@ bool read_am2320_i2c(float &humidity, float &temperature) {
 }
 
 // VEML7700 helpers
-bool read16reg(uint8_t addr, uint8_t reg, uint16_t &out) {
+bool read16Reg(uint8_t addr, uint8_t reg, uint16_t &out) {
   Wire.beginTransmission(addr);
   Wire.write(reg);
   if (Wire.endTransmission(false) != 0) return false; // restart
@@ -95,7 +100,7 @@ bool write16reg(uint8_t addr, uint8_t reg, uint16_t value) {
   return (Wire.endTransmission() == 0);
 }
 
-bool init_veml7700() {
+bool initLightSensor() {
     Wire.beginTransmission(VEML7700_ADDR);
     uint16_t conf = 0x0000;
     Wire.write(VEML7700_REG_CONF);
@@ -104,16 +109,15 @@ bool init_veml7700() {
     return (Wire.endTransmission() == 0);
 }
 
-bool read_veml7700_raw(uint16_t &als_raw) {
+uint16_t readLightRaw() {
     Wire.beginTransmission(VEML7700_ADDR);
     Wire.write(VEML7700_REG_ALS);
-    if (Wire.endTransmission(false) != 0) return false; // send restart
+    if (Wire.endTransmission(false) != 0) return 0; // send restart
     uint8_t n = Wire.requestFrom(VEML7700_ADDR, (uint8_t)2);
-    if (n != 2) return false;
+    if (n != 2) return 0;
     uint8_t l = Wire.read();
     uint8_t h = Wire.read();
-    als_raw = (uint16_t)h << 8 | l;
-    return true;
+    return (uint16_t)h << 8 | l;
 }
 
 float calculateTempSteinhart(float r) {
@@ -123,23 +127,25 @@ float calculateTempSteinhart(float r) {
   return (1.0 / inverseT) - 273.15;
 }
 
-bool sensors_begin() {
+bool sensorsBegin() {
   // Initialize I2C on the ESP32 default pins used earlier
   Wire.begin(21, 22);
   // set pin modes
-  pinMode(MOIST_PIN, INPUT);
+  pinMode(MOIST_PIN_CALATHEA, INPUT);
+  pinMode(MOIST_PIN_DIEFFENBACHIA, INPUT);
   pinMode(TEMP_PIN, INPUT);
   analogSetPinAttenuation(TEMP_PIN, ADC_11db);
   // Try to initialize VEML
-  return init_veml7700();
+  return initLightSensor();
 }
 
-int read_moisture() {
-  return analogRead(MOIST_PIN);
+int readSoilMoistureRaw(int moistPin) {
+  return analogRead(moistPin);
 }
 
-float read_tempC(int &adcOut, float &resistanceOut) {
-  adcOut = analogRead(TEMP_PIN);
+float readTempC(int tempPin) {
+  int adcOut = analogRead(tempPin);
+  int resistanceOut;
   if (adcOut <= 0 || adcOut >= ADC_MAX) {
     resistanceOut = -1.0;
     return -999.0;

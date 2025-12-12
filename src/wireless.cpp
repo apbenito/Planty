@@ -70,6 +70,20 @@ void readMessagesTelegram() {
   }
 }
 
+void sendTelegramMessage(String message) {
+  Serial.print("Sending message: ");
+  Serial.println(message);
+  
+  // 1. Send the message
+  // Syntax: bot.sendMessage(chat_id, text, parse_mode)
+  bool success = bot.sendMessage(CHAT_ID, message, "");
+  if (success) {
+    Serial.println("✅ Message sent successfully!");
+  } else {
+    Serial.println("❌ Failed to send. Check WiFi or Token.");
+  }
+}
+
 // void fetchPlantInfo() {
     
 // }
@@ -118,17 +132,3 @@ void readMessagesTelegram() {
 //     }
 // }
 
-void sendTelegramMessage(String message) {
-  Serial.print("Sending message: ");
-  Serial.println(message);
-  
-  // 1. Send the message
-  // Syntax: bot.sendMessage(chat_id, text, parse_mode)
-  bool success = bot.sendMessage(CHAT_ID, message, "");
-
-  if (success) {
-    Serial.println("✅ Message sent successfully!");
-  } else {
-    Serial.println("❌ Failed to send. Check WiFi or Token.");
-  }
-}
